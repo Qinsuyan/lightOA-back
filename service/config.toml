@@ -1,0 +1,13 @@
+[log]
+enable=true
+level="debug"
+[http]
+enable=true
+dist="./web"
+port=":8888"
+[mysql]
+host="127.0.0.1"
+port=3306
+user=""
+password=""
+dbname=""

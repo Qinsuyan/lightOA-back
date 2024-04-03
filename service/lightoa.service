@@ -1,0 +1,16 @@
+[Unit]
+Description = light-OA
+After = network.target syslog.target
+Wants = network.target
+
+[Service]
+Type = simple
+WorkingDirectory=/home/ubuntu/lightoa
+ExecStart=/home/ubuntu/lightoa/lightoa
+Restart=always
+RestartSec=10
+StartLimitInterval=7200
+StartLimitBurst=60
+
+[Install]
+WantedBy = multi-user.target
