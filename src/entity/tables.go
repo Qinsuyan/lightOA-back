@@ -6,7 +6,7 @@ import "time"
 type UserRaw struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
 	Username  string    `xorm:"varchar(20) notnull unique index 'username'" json:"username"`
-	Password  string    `xorm:"varchar(50) notnull 'password'" json:"password"`
+	Password  string    `xorm:"varchar(80) notnull 'password'" json:"password"`
 	Role      int       `xorm:"int notnull 'role'" json:"role"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
 	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`

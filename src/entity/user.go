@@ -3,7 +3,7 @@ package entity
 type UserInfo struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
-	Role     int    `json:"role"`
+	Role     Role   `json:"role"`
 }
 
 type UserPayload struct {
@@ -11,6 +11,7 @@ type UserPayload struct {
 	Username        string `json:"username"`
 	Password        string `json:"password"`
 	PasswordConfirm string `json:"passwordConfirm,omitempty"`
+	Role            int    `json:"role"`
 }
 
 type UserToken struct {

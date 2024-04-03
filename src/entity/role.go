@@ -1,9 +1,9 @@
 package entity
 
 type Role struct {
-	Id        int        `json:"id,omitempty"`
-	Name      string     `json:"name"`
-	Resources []Resource `json:"resources"` //nil = all
+	Id        int         `json:"id,omitempty"`
+	Name      string      `json:"name"`
+	Resources []*Resource `json:"resources"` //nil = all
 }
 
 type Resource struct {
