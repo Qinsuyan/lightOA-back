@@ -111,7 +111,7 @@ func handleUserAdd(c echo.Context) error {
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "参数解析失败",
-			Prompt: entity.WARN,
+			Prompt: entity.ERROR,
 		})
 		return err
 	}
@@ -134,7 +134,7 @@ func handleUserAdd(c echo.Context) error {
 	if user.Role == 0 {
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
 			Code:   ERROR_INVALID_PARAM,
-			Msg:    "必须指定权限",
+			Msg:    "必须指定角色",
 			Prompt: entity.WARN,
 		})
 		return nil

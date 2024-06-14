@@ -34,7 +34,7 @@ func FormUserRole(role *entity.Role, resources []*entity.ResourceRaw) *entity.Ro
 	// 构建树结构
 	for _, node := range resources {
 		if parentNode, ok := nodeMap[node.ParentId]; ok {
-			parentNode.Children = append(parentNode.Children, entity.Resource{
+			parentNode.Children = append(parentNode.Children, &entity.Resource{
 				Id:       node.Id,
 				Alias:    node.Alias,
 				Name:     node.Name,

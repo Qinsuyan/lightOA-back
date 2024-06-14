@@ -71,6 +71,12 @@ func Start(port string, dist string) error {
 			// user.PUT("/:username", handleUserModify)    //修改其他用户的信息
 			// user.DELETE("/:username", handleUserDelete) //删除用户
 		}
+		//角色操作
+		role := onlines.Group("/role")
+		{
+			role.POST("", handleRoleAdd) //新增角色
+			role.PUT("", handleRoleEdit) //编辑角色
+		}
 	}
 	err := e.Start(port)
 	return err

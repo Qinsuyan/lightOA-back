@@ -19,16 +19,30 @@ type Online struct {
 	Expire   time.Time `xorm:"datetime notnull 'expire'" json:"expire"`
 }
 
+//资源表
 type ResourceRaw struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
-	Name      string    `xorm:"varchar(20) notnull index 'name'" json:"name"`
-	Alias     string    `xorm:"varchar(20) notnull unique 'alias'" json:"alias"`
-	Type      int       `xorm:"int notnull 'type'" json:"type"`
+	Name      string    `xorm:"varchar(20) notnull index 'name'" json:"name"`    //资源的名称 e.g.添加用户
+	Alias     string    `xorm:"varchar(20) notnull unique 'alias'" json:"alias"` //资源的别名 e.g.user:add
+	Type      int       `xorm:"int notnull 'type'" json:"type"`                  //资源的类型,目前没有使用，默认为1
 	ParentId  int       `xorm:"int 'parentId'" json:"parentId"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
 	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
 }
 
+//系统整型变量
+type SystemVariableInts struct {
+	Name  string `xorm:"varchar(20) pk 'name'" json:"name"`
+	Value string `xorm:"int notnull 'value'" json:"value"`
+}
+
+//系统字符串变量
+type SystemVariableTexts struct {
+	Name  string `xorm:"varchar(20) pk 'name'" json:"name"`
+	Value string `xorm:"longtext notnull 'value'" json:"value"`
+}
+
+//角色表
 type RoleRaw struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
 	Name      string    `xorm:"varchar(20) notnull index 'name'" json:"name"`
@@ -45,6 +59,7 @@ type RoleResource struct {
 	ResourceId int `xorm:"bigint(11) pk 'resourceId'" json:"resourceId"` // 资源ID，bigint类型，作为主键
 }
 
+//用户日志表
 type UserLog struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
 	Content   string    `xorm:"longtext 'description'" json:"description"`

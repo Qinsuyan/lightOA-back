@@ -1,0 +1,134 @@
+[
+  {
+    "id": 2,
+    "name": "用户",
+    "alias": "user",
+    "type": 1,
+    "parentId": 1
+  },
+  {
+    "id": 3,
+    "name": "角色",
+    "alias": "role",
+    "type": 1,
+    "parentId": 1
+  },
+  {
+    "id": 4,
+    "name": "报销",
+    "alias": "reimburse",
+    "type": 1,
+    "parentId": 1
+  },
+  {
+    "id": 5,
+    "name": "文档",
+    "alias": "document",
+    "type": 1,
+    "parentId": 1
+  },
+  {
+    "id": 6,
+    "name": "缺陷管理",
+    "alias": "bugs",
+    "type": 1,
+    "parentId": 1
+  },
+  {
+    "id": 7,
+    "name": "系统设置",
+    "alias": "settings",
+    "type": 1,
+    "parentId": 1
+  },
+  {
+    "name": "添加用户",
+    "alias": "user:add",
+    "type": 1,
+    "parentId": 2
+  },
+  {
+    "name": "删除用户",
+    "alias": "user:del",
+    "type": 1,
+    "parentId": 2
+  },
+  {
+    "name": "修改用户",
+    "alias": "user:edit",
+    "type": 1,
+    "parentId": 2
+  },
+  {
+    "name": "列出用户",
+    "alias": "user:list",
+    "type": 1,
+    "parentId": 2
+  },
+  {
+    "name": "添加角色",
+    "alias": "role:add",
+    "type": 1,
+    "parentId": 3
+  },
+  {
+    "name": "删除角色",
+    "alias": "role:del",
+    "type": 1,
+    "parentId": 3
+  },
+  {
+    "name": "修改角色",
+    "alias": "role:edit",
+    "type": 1,
+    "parentId": 3
+  },
+  {
+    "name": "列出角色",
+    "alias": "role:list",
+    "type": 1,
+    "parentId": 3
+  },
+  {
+    "name": "添加报销",
+    "alias": "reimburse:add",
+    "type": 1,
+    "parentId": 4
+  },
+  {
+    "name": "删除报销",
+    "alias": "reimburse:del",
+    "type": 1,
+    "parentId": 4
+  },
+  {
+    "name": "修改报销",
+    "alias": "reimburse:edit",
+    "type": 1,
+    "parentId": 4
+  },
+  {
+    "name": "列出报销",
+    "alias": "reimburse:list",
+    "type": 1,
+    "parentId": 4
+  },
+  {
+    "name": "审核报销",
+    "alias": "reimburse:audit",
+    "type": 1,
+    "parentId": 4
+  },
+  {
+    "name": "编辑欢迎消息",
+    "alias": "settings:welcome",
+    "type": 1,
+    "parentId": 7
+  },
+  {
+    "name": "设置报销延迟时间",
+    "alias": "settings:reimburse:delay",
+    "type": 1,
+    "parentId": 7
+  }
+]

@@ -1,10 +1,13 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"lightOA-end/src/config"
 	"lightOA-end/src/entity"
 	"lightOA-end/src/log"
+	"os"
 	"time"
 
 	"xorm.io/xorm"
@@ -45,12 +48,16 @@ func Init(conf *config.Mysql) error {
 	if err != nil {
 		return err
 	}
+	err = addDefaultResource()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // 初始化数据库
 func createTables() error {
-	err := con.Sync(new(entity.UserRaw), new(entity.Online), new(entity.ResourceRaw), new(entity.RoleRaw), new(entity.RoleResource), new(entity.UserLog))
+	err := con.Sync(new(entity.UserRaw), new(entity.Online), new(entity.ResourceRaw), new(entity.RoleRaw), new(entity.RoleResource), new(entity.UserLog), new(entity.SystemVariableInts), new(entity.SystemVariableTexts))
 	if err != nil {
 		log.Err(err).Msg("err while syncing database")
 	}
@@ -66,6 +73,26 @@ func createRootResource() error {
 	return err
 }
 
+func addDefaultResource() error {
+	file, err := os.Open("./resources.json")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	bytes, _ := io.ReadAll(file)
+	var resources []entity.ResourceRaw
+	err = json.Unmarshal(bytes, &resources)
+	if err != nil {
+		return nil
+	}
+	for _, resource := range resources {
+		_, err := con.Insert(&resource)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func addSuperUser() error {
 	_, err := con.Exec("insert ignore into user_raw(id,username,password,role,createdAt) values (1,'admin','8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',1,'2023-01-01 00:00:00')")
 	if err != nil {

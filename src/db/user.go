@@ -2,7 +2,6 @@ package db
 
 import (
 	"lightOA-end/src/entity"
-	"lightOA-end/src/util"
 	"time"
 )
 
@@ -81,43 +80,6 @@ func LoginUser(record *entity.Online) (string, error) {
 	}
 }
 
-func GetUserRoleByRoleId(id int) (*entity.Role, error) {
-	roleRaw := entity.RoleRaw{Id: id}
-	roleExist, err := con.Get(&roleRaw)
-	if err != nil {
-		return nil, err
-	}
-	if !roleExist {
-		return nil, nil
-	}
-	resourceIds := make([]entity.RoleResource, 0)
-	idSession := con.Table(entity.RoleResource{})
-	err = idSession.Where("roleId = ?", id).Find(&resourceIds)
-	defer func() {
-		idSession.Close()
-	}()
-	if err != nil {
-		return nil, err
-	}
-	resources := make([]*entity.ResourceRaw, 0)
-	session := con.Table(entity.ResourceRaw{})
-	ids := make([]int, len(resources))
-	for r := range resourceIds {
-		ids = append(ids, resourceIds[r].ResourceId)
-	}
-	defer func() {
-		session.Close()
-	}()
-	err = session.In("Id", ids).Find(&resources)
-	if err != nil {
-		return nil, err
-	}
-	//组装树结构
-	role := &entity.Role{Id: roleRaw.Id, Name: roleRaw.Name}
-	util.FormUserRole(role, resources)
-	return role, nil
-}
-
 func LogoutUser(record *entity.Online) {
 	record.Expire = time.Now()
 	session := con.Table(entity.Online{})
@@ -136,6 +98,13 @@ func IsUserAuthorized(alias string, token string) (bool, *entity.UserRaw, error)
 		return false, nil, nil
 	}
 	if !user.DeletedAt.IsZero() {
+		return false, nil, nil
+	}
+	roleRaw, err := GetRoleRawById(user.Role)
+	if err != nil {
+		return false, nil, err
+	}
+	if !roleRaw.DeletedAt.IsZero() {
 		return false, nil, nil
 	}
 	//获取到用户的所有资源

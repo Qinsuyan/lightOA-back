@@ -1,0 +1,13 @@
+[log]
+enable=true
+level="debug"
+[http]
+enable=true
+dist="./web"
+port=":11416"
+[mysql]
+host="127.0.0.1"
+port=3306
+user="oaer"
+password="123456"
+dbname="lightoa"
