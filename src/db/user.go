@@ -2,6 +2,7 @@ package db
 
 import (
 	"lightOA-end/src/entity"
+	"strings"
 	"time"
 )
 
@@ -38,7 +39,7 @@ func GetUserRawByToken(token string) (*entity.UserRaw, error) {
 		return nil, err
 	}
 	user := &entity.UserRaw{
-		Username: online.Username,
+		Phone: online.Phone,
 	}
 	exist, err := con.Get(user)
 	if err != nil {
@@ -55,7 +56,7 @@ func GetUserRawByToken(token string) (*entity.UserRaw, error) {
 
 func LoginUser(record *entity.Online) (string, error) {
 	search := &entity.Online{
-		Username: record.Username,
+		Phone: record.Phone,
 	}
 	exist, err := con.Get(search)
 	if err != nil {
@@ -66,7 +67,7 @@ func LoginUser(record *entity.Online) (string, error) {
 		defer func() {
 			session.Close()
 		}()
-		_, err = session.Where("username = ?", record.Username).Cols("expire").Update(record)
+		_, err = session.Where("phone = ?", record.Phone).Cols("expire").Update(record)
 		if err != nil {
 			return "", err
 		}
@@ -80,13 +81,33 @@ func LoginUser(record *entity.Online) (string, error) {
 	}
 }
 
-func LogoutUser(record *entity.Online) {
-	record.Expire = time.Now()
+func LogoutUserByToken(token string) {
 	session := con.Table(entity.Online{})
 	defer func() {
 		session.Close()
 	}()
-	session.Where("token = ?", record.Token).Update(record)
+	record := &entity.Online{Token: token, Expire: time.Now()}
+	session.Where("token = ?", token).Update(record)
+}
+
+func LogoutUserByPhone(phone string) {
+	session := con.Table(entity.Online{})
+	defer func() {
+		session.Close()
+	}()
+	record := &entity.Online{Phone: phone, Expire: time.Now()}
+	session.Where("phone = ?", phone).Update(record)
+}
+
+var NaturalPriviledges = []string{"user:self"}
+
+func contains(haystack []string, needle string) bool {
+	for _, v := range haystack {
+		if v == needle {
+			return true
+		}
+	}
+	return false
 }
 
 func IsUserAuthorized(alias string, token string) (bool, *entity.UserRaw, error) {
@@ -106,6 +127,9 @@ func IsUserAuthorized(alias string, token string) (bool, *entity.UserRaw, error)
 	}
 	if !roleRaw.DeletedAt.IsZero() {
 		return false, nil, nil
+	}
+	if contains(NaturalPriviledges, alias) {
+		return true, user, nil
 	}
 	//获取到用户的所有资源
 	//如果连root资源都没有，则具有全部权限
@@ -143,10 +167,28 @@ func IsUserAuthorized(alias string, token string) (bool, *entity.UserRaw, error)
 	return false, user, nil
 }
 
+func ExistUserOfRole(roleId int) (bool, error) {
+	session := con.Table(entity.UserRaw{})
+	defer func() {
+		session.Close()
+	}()
+	return session.Where("role = ?", roleId).Exist()
+}
+
 // AddUser 新增用户
 func AddUser(user *entity.UserRaw) (bool, error) {
+	// search := &entity.UserRaw{
+	// 	Username: user.Username,
+	// }
+	// exist, err := con.Get(search)
+	// if err != nil {
+	// 	return true, err
+	// }
+	// if exist {
+	// 	return false, nil
+	// }
 	search := &entity.UserRaw{
-		Username: user.Username,
+		Phone: user.Phone,
 	}
 	exist, err := con.Get(search)
 	if err != nil {
@@ -160,4 +202,46 @@ func AddUser(user *entity.UserRaw) (bool, error) {
 		return true, err
 	}
 	return true, nil
+}
+
+// 编辑用户
+func EditUser(userId int, user *entity.UserRaw) error {
+	_, err := con.Table(entity.UserRaw{}).Where("id = ?", userId).Update(user)
+	return err
+}
+
+// 删除用户
+func DeleteUser(userId int) error {
+	_, err := con.Table(entity.UserRaw{}).Where("id = ?", userId).Delete(entity.UserRaw{})
+	return err
+}
+
+func ListUser(filter *entity.UserListFilter) ([]entity.UserInfo, error) {
+	session := con.Table(entity.UserRaw{})
+	if filter.Username != "" {
+		session.Where("username like ?", "%"+filter.Username+"%")
+	}
+	if filter.Phone != "" {
+		session.Where("phone like ?", "%"+filter.Phone+"%")
+	}
+	if filter.Role != 0 {
+		session.Where("role = ?", filter.Role)
+	}
+	if filter.Sort != "" && filter.Order != "" {
+		cols := []string{}
+		cols = append(cols, strings.Split(filter.Order, ",")...)
+		if filter.Sort == "desc" {
+			session.Desc(cols...)
+		} else {
+			session.Asc(cols...)
+		}
+	}
+	if filter.PageSize != 0 && filter.PageNum != 0 {
+		session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
+	}
+	result := []entity.UserInfo{}
+	if err := session.Find(&result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

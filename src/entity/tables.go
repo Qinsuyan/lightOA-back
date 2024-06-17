@@ -5,8 +5,9 @@ import "time"
 // 用户表
 type UserRaw struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
-	Username  string    `xorm:"varchar(20) notnull unique index 'username'" json:"username"`
+	Username  string    `xorm:"varchar(20) notnull index 'username'" json:"username"`
 	Password  string    `xorm:"varchar(80) notnull 'password'" json:"password"`
+	Phone     string    `xorm:"varchar(20) notnull unique index 'phone'" json:"phone"`
 	Role      int       `xorm:"int notnull 'role'" json:"role"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
 	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
@@ -14,9 +15,9 @@ type UserRaw struct {
 
 // 登录状态表
 type Online struct {
-	Username string    `xorm:"varchar(20) notnull unique index 'username'" json:"username"`
-	Token    string    `xorm:"varchar(64) notnull 'token'" json:"token"`
-	Expire   time.Time `xorm:"datetime notnull 'expire'" json:"expire"`
+	Phone  string    `xorm:"varchar(20) notnull unique index 'phone'" json:"phone"`
+	Token  string    `xorm:"varchar(64) notnull 'token'" json:"token"`
+	Expire time.Time `xorm:"datetime notnull 'expire'" json:"expire"`
 }
 
 //资源表

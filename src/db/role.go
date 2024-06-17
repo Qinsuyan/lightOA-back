@@ -121,3 +121,38 @@ func DeleteRoleResource(roleId int) error {
 	_, err := con.Where("roleId = ?", roleId).Delete(&entity.RoleResource{})
 	return err
 }
+
+func DeleteRole(id int) error {
+	_, err := con.Delete(&entity.RoleRaw{Id: id})
+	return err
+}
+func ListRole(filter *entity.RoleListFilter) ([]entity.Role, error) {
+	session := con.Table(entity.RoleRaw{})
+	if filter.Name != "" {
+		session.Where("name like ?", "%"+filter.Name+"%")
+	}
+
+	if filter.Sort != "" {
+		if filter.Sort == "desc" {
+			session.Desc("name")
+		} else {
+			session.Asc("name")
+		}
+	}
+	if filter.PageSize != 0 && filter.PageNum != 0 {
+		session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
+	}
+	roleRaws := []entity.RoleRaw{}
+	if err := session.Find(&roleRaws); err != nil {
+		return nil, err
+	}
+	result := []entity.Role{}
+	for _, r := range roleRaws {
+		role, err := GetUserRoleByRoleId(r.Id)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *role)
+	}
+	return result, nil
+}

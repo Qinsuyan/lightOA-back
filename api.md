@@ -37,3 +37,15 @@
     msg string //提示信息
 }
 ```
+
+3. 用户登出
+
+- GET /api/login
+- 响应 body：json
+
+```go
+{
+    code int       //200-成功 非200-失败
+    msg string //提示信息
+}
+```
