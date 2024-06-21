@@ -4,11 +4,21 @@ import "time"
 
 // 用户表
 type UserRaw struct {
+	Id         int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
+	Username   string    `xorm:"varchar(20) notnull index 'username'" json:"username"`
+	Password   string    `xorm:"varchar(80) notnull 'password'" json:"password"`
+	Department int       `xorm:"int notnull 'department'" json:"department"`
+	Phone      string    `xorm:"varchar(20) notnull unique index 'phone'" json:"phone"`
+	Role       int       `xorm:"int notnull 'role'" json:"role"`
+	CreatedAt  time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
+	DeletedAt  time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
+}
+
+//部门表
+type Department struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
-	Username  string    `xorm:"varchar(20) notnull index 'username'" json:"username"`
-	Password  string    `xorm:"varchar(80) notnull 'password'" json:"password"`
-	Phone     string    `xorm:"varchar(20) notnull unique index 'phone'" json:"phone"`
-	Role      int       `xorm:"int notnull 'role'" json:"role"`
+	Name      string    `xorm:"varchar(20) notnull index 'name'" json:"name"`
+	Desc      string    `xorm:"longtext 'description'" json:"description"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
 	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
 }
@@ -66,4 +76,16 @@ type UserLog struct {
 	Content   string    `xorm:"longtext 'description'" json:"description"`
 	Type      string    `xorm:"varchar(20) notnull index 'type'" json:"type"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
+}
+
+//文件信息表（除了本来就是用来展示的文件，还包括报账的发票、缺陷管理的附件和图片）
+type File struct {
+	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
+	UUID      string    `xorm:"varchar(36) unique index 'uuid'" json:"uuid"`
+	Name      string    `xorm:"varchar(50) notnull unique 'name'" json:"name"`
+	Owner     int       `xorm:"bigint(11) index 'owner'" json:"owner"`
+	Type      int       `xorm:"int notnull 'type'" json:"type"` //文件类型，1:展示文件，2:报账发票，3:缺陷管理附件，4:缺陷管理图片
+	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
+	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
+	UpdatedAt time.Time `xorm:"datetime notnull updated 'updatedAt'" json:"updatedAt"`
 }

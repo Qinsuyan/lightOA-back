@@ -81,6 +81,7 @@ func handleRoleAdd(c echo.Context) error {
 	//添加资源
 	roleId, err := db.GetRoleIdByName(role.Name)
 	if err != nil {
+		db.DeleteRole(roleId)
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "资源配置失败",
@@ -98,6 +99,7 @@ func handleRoleAdd(c echo.Context) error {
 	}
 	ok, err = db.AddRoleResource(roleId, role.Resources)
 	if !ok || err != nil {
+		db.DeleteRole(roleId)
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "资源配置失败",
@@ -135,6 +137,7 @@ func handleRoleEdit(c echo.Context) error {
 			Msg:    "角色id不能为空",
 			Prompt: entity.WARN,
 		})
+		return nil
 	}
 	if role.Name == "" {
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
@@ -142,6 +145,7 @@ func handleRoleEdit(c echo.Context) error {
 			Msg:    "角色名不能为空",
 			Prompt: entity.WARN,
 		})
+		return nil
 	}
 	if len(role.Resources) == 0 {
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
@@ -265,12 +269,6 @@ func handleRoleList(c echo.Context) error {
 		})
 		return err
 	}
-	// if filter.PageSize == 0 {
-	// 	filter.PageSize = 10
-	// }
-	// if filter.PageNum == 0 {
-	// 	filter.PageNum = 1
-	// }
 	roles, err := db.ListRole(&filter)
 	if err != nil {
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{

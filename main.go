@@ -4,6 +4,7 @@ import (
 	"lightOA-end/src/api"
 	"lightOA-end/src/config"
 	"lightOA-end/src/db"
+	"lightOA-end/src/file"
 	"lightOA-end/src/log"
 	"os"
 	"os/signal"
@@ -21,9 +22,19 @@ func main() {
 	if config.Log.Enable {
 		log.Setup(config.Log.Level)
 	}
+	//连接数据库
 	err := db.Init(config.DBMysql)
 	if err != nil {
 		log.Err(err).Msg("failed to establish db connection")
+		return
+	}
+	//初始化file
+	if config.Storage.Path == "" {
+		log.Err(nil).Msg("storage file path is empty")
+	}
+	err = file.Init(config.Storage.Path, config.Storage.Password)
+	if err != nil {
+		log.Err(err).Msg("failed to init file storage")
 		return
 	}
 	// http

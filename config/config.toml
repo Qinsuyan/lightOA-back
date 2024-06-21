@@ -5,6 +5,10 @@ level="debug"
 enable=true
 dist="./web"
 port=":11416"
+[file]
+enable=true
+path="./storage"
+password="light-oa"
 [mysql]
 host="127.0.0.1"
 port=3306

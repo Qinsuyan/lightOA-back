@@ -57,7 +57,17 @@ func Init(conf *config.Mysql) error {
 
 // 初始化数据库
 func createTables() error {
-	err := con.Sync(new(entity.UserRaw), new(entity.Online), new(entity.ResourceRaw), new(entity.RoleRaw), new(entity.RoleResource), new(entity.UserLog), new(entity.SystemVariableInts), new(entity.SystemVariableTexts))
+	err := con.Sync(
+		new(entity.UserRaw),
+		new(entity.Online),
+		new(entity.ResourceRaw),
+		new(entity.RoleRaw),
+		new(entity.RoleResource),
+		new(entity.UserLog),
+		new(entity.SystemVariableInts),
+		new(entity.SystemVariableTexts),
+		new(entity.Department),
+	)
 	if err != nil {
 		log.Err(err).Msg("err while syncing database")
 	}
@@ -72,7 +82,6 @@ func createRootResource() error {
 	}
 	return err
 }
-
 func addDefaultResource() error {
 	file, err := os.Open("./resources.json")
 	if err != nil {
@@ -80,27 +89,45 @@ func addDefaultResource() error {
 	}
 	defer file.Close()
 	bytes, _ := io.ReadAll(file)
-	var resources []entity.ResourceRaw
+	var resources []*entity.Resource
 	err = json.Unmarshal(bytes, &resources)
 	if err != nil {
-		return nil
+		return err
 	}
-	valuesWithId := ""
-	valuesWithoutId := ""
+	return insertResources(resources, 1)
+}
+func insertResources(resources []*entity.Resource, parentId int) error {
 	for _, resource := range resources {
-		if resource.Id != 0 {
-			valuesWithId += fmt.Sprintf("('%s', '%s', %d,%d, %d),", resource.Name, resource.Alias, resource.Type, resource.Id, resource.ParentId)
-		} else {
-			valuesWithoutId += fmt.Sprintf("('%s', '%s', %d, %d),", resource.Name, resource.Alias, resource.Type, resource.ParentId)
+		existing := entity.ResourceRaw{
+			Alias: resource.Alias,
 		}
-	}
-	_, err = con.Exec("insert ignore into resource_raw(name,alias,type,id,parentId) values " + valuesWithId[0:len(valuesWithId)-1] + ";")
-	if err != nil {
-		return err
-	}
-	_, err = con.Exec("insert ignore into resource_raw(name,alias,type,parentId) values " + valuesWithoutId[0:len(valuesWithoutId)-1] + ";")
-	if err != nil {
-		return err
+		has, err := con.Get(&existing)
+		if err != nil {
+			return err
+		}
+		var pId int
+		if !has {
+			newResource := entity.ResourceRaw{
+				Name:      resource.Name,
+				Alias:     resource.Alias,
+				Type:      resource.Type,
+				ParentId:  parentId,
+				CreatedAt: time.Now(),
+			}
+			_, err = con.Insert(&newResource)
+			if err != nil {
+				return err
+			}
+			pId = newResource.Id
+		} else {
+			pId = existing.Id
+		}
+		if len(resource.Children) > 0 {
+			err = insertResources(resource.Children, pId)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -111,7 +138,6 @@ func addSuperUser() error {
 	}
 	return nil
 }
-
 func addSuperRole() error {
 	_, err := con.Exec("insert ignore into role_raw(id,name,description,createdAt) values (1,'admin','超级管理员','2023-01-01 00:00:00')")
 	if err != nil {

@@ -50,6 +50,7 @@
   phone: string;
   password: string;
   passwordConfirm: string;
+  department: int;//部门ID
   role: int; //角色ID
 }
 ```
@@ -98,6 +99,7 @@
   password: string; //可选，修改密码时传入
   passwordConfirm: string; //可选，修改密码时传入
   role: int; //可选，修改角色时传入
+  department:int;//可选，修改部门时传入
 }
 ```
 
@@ -295,3 +297,4 @@ Resource 类型：
     data:Resource
 }
 ```
+

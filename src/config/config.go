@@ -10,12 +10,14 @@ import (
 var Log *log
 var Http *http
 var DBMysql *Mysql
+var Storage *file
 
 // configure 配置文件
 type configure struct {
 	Log   log
 	Http  http
 	Mysql Mysql
+	File  file
 }
 
 // LOG 解析日志的配置
@@ -29,6 +31,13 @@ type http struct {
 	Dist   string
 	Port   string
 }
+
+type file struct {
+	Enable   bool
+	Path     string
+	Password string
+}
+
 type Mysql struct {
 	Host     string
 	Port     int
@@ -56,5 +65,6 @@ func Load(dir string) error {
 	Log = &conf.Log
 	Http = &conf.Http
 	DBMysql = &conf.Mysql
+	Storage = &conf.File
 	return nil
 }

@@ -229,7 +229,7 @@ func DeleteUser(userId int) error {
 	return err
 }
 
-func ListUser(filter *entity.UserListFilter) ([]entity.UserInfo, error) {
+func ListUser(filter *entity.UserListFilter) (int64, []entity.UserInfo, error) {
 	session := con.Table(entity.UserRaw{})
 	if filter.Username != "" {
 		session.Where("username like ?", "%"+filter.Username+"%")
@@ -252,9 +252,24 @@ func ListUser(filter *entity.UserListFilter) ([]entity.UserInfo, error) {
 	if filter.PageSize != 0 && filter.PageNum != 0 {
 		session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
 	}
-	result := []entity.UserInfo{}
-	if err := session.Find(&result); err != nil {
-		return nil, err
+	users := []entity.UserRaw{}
+	total, err := session.FindAndCount(&users)
+	if err != nil {
+		return 0, nil, err
 	}
-	return result, nil
+	var result []entity.UserInfo
+	for _, user := range users {
+		role, err := GetUserRoleByRoleId(user.Role)
+		if err != nil {
+			return 0, nil, err
+		}
+		result = append(result, entity.UserInfo{
+			Department: user.Department,
+			Role:       *role,
+			Id:         user.Id,
+			Username:   user.Username,
+			Phone:      user.Phone,
+		})
+	}
+	return total, result, nil
 }

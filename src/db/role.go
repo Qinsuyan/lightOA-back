@@ -23,7 +23,7 @@ func GetUserRoleByRoleId(id int) (*entity.Role, error) {
 	if err != nil {
 		return nil, err
 	}
-	resources := make([]*entity.ResourceRaw, 0)
+	resources := make([]entity.ResourceRaw, 0)
 	session := con.Table(entity.ResourceRaw{})
 	ids := make([]int, len(resources))
 	for r := range resourceIds {
@@ -107,7 +107,7 @@ func AddRoleResource(roleId int, resource []*entity.Resource) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		if r.Children != nil {
+		if r.Children != nil && len(r.Children) != 0 {
 			ok, err := AddRoleResource(roleId, r.Children)
 			if !ok || err != nil {
 				return false, err
@@ -129,18 +129,17 @@ func DeleteRole(id int) error {
 func ListRole(filter *entity.RoleListFilter) ([]entity.Role, error) {
 	session := con.Table(entity.RoleRaw{})
 	if filter.Name != "" {
-		session.Where("name like ?", "%"+filter.Name+"%")
+		session = session.Where("name like ?", "%"+filter.Name+"%")
 	}
-
 	if filter.Sort != "" {
 		if filter.Sort == "desc" {
-			session.Desc("name")
+			session = session.Desc("name")
 		} else {
-			session.Asc("name")
+			session = session.Asc("name")
 		}
 	}
 	if filter.PageSize != 0 && filter.PageNum != 0 {
-		session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
+		session = session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
 	}
 	roleRaws := []entity.RoleRaw{}
 	if err := session.Find(&roleRaws); err != nil {

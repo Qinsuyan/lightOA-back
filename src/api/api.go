@@ -53,6 +53,8 @@ func Start(port string, dist string) error {
 			if err != nil {
 				log.Err(err).Msgf("err while %s %s", c.Request().Method, c.Request().URL.Path)
 			}
+		} else {
+			log.Err(err).Msgf("err while %s %s", c.Request().Method, c.Request().URL.Path)
 		}
 	}
 	e.Static("/", dist)
@@ -72,6 +74,7 @@ func Start(port string, dist string) error {
 			user.DELETE("/:id", handleUserDelete) //6.删除用户
 			user.GET("/list", handleUserList)     //7.列出用户
 		}
+
 		//角色操作
 		role := onlines.Group("/role")
 		{
@@ -81,6 +84,36 @@ func Start(port string, dist string) error {
 			role.GET("/list", handleRoleList)          //11.列出角色
 			role.GET("/resources", handleResourceList) //12.列出所有的资源
 		}
+		//部门管理
+		department := onlines.Group("/department")
+		{
+			department.POST("", handleDepartmentAdd)          //13.新增部门
+			department.PUT("", handleDepartmentEdit)          //14.编辑部门
+			department.DELETE("/:id", handleDepartmentDelete) //15.删除部门
+			department.GET("/list", handleDepartmentList)     //16.列出部门
+		}
+		//报账管理
+		// reimburse := onlines.Group("/reimburse")
+		// {
+		// 	//管理
+		// 	reimburse.POST("", handleReimburseAdd)                //17.新增报账
+		// 	reimburse.POST("/files", handleReimburseAddFile)      //18.新增报账文件
+		// 	reimburse.PUT("", handleReimburseEdit)                //19.编辑报账信息
+		// 	reimburse.DELETE("", handleReimburseDelete)           //20.删除报账
+		// 	reimburse.GET("/history", handleReimburseHistory)     //21.列出自己的报账
+		// 	reimburse.GET("/list", handleReimburseList)           //22.列出所有人的报账
+		// 	reimburse.POST("/audit", handleReimburseAudit)        //23.审核报账信息（可以批量）
+		// 	reimburse.GET("/:id", handleReimburseDetail)          //24.查看报账详情
+		// 	reimburse.GET("/sheet", handleReimburseExportAsSheet) //25.导出报账表格
+		// 	reimburse.GET("/zip", handleReimburseExportAsZip)     //26.导出报账的所有文件（日期-人员-事由-文件；表格）
+		// 	//统计
+
+		// }
+		//文件管理
+		// files := onlines.Group("/files")
+		// {
+		// 	files.POST("", handleFileUpload) //18.上传文件
+		// }
 	}
 	err := e.Start(port)
 	return err

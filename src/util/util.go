@@ -18,7 +18,7 @@ func FormToken(username string) string {
 	return hex.EncodeToString(bytes)
 }
 
-func FormUserRole(role *entity.Role, resources []*entity.ResourceRaw) *entity.Role {
+func FormUserRole(role *entity.Role, resources []entity.ResourceRaw) *entity.Role {
 	nodeMap := make(map[int]*entity.Resource)
 	var roots []*entity.Resource
 	// 将节点按照 ParentID 存储到 map 中
@@ -40,28 +40,12 @@ func FormUserRole(role *entity.Role, resources []*entity.ResourceRaw) *entity.Ro
 		} else if ok {
 			roots = append(roots, node)
 		}
-
-		// if parentNode, ok := ]; ok {
-		// 	parentNode.Children = append(parentNode.Children, &entity.Resource{
-		// 		Id:       node.Id,
-		// 		Alias:    node.Alias,
-		// 		Name:     node.Name,
-		// 		Type:     node.Type,
-		// 		ParentId: node.ParentId,
-		// 	})
-		// } else {
-
-		// 	if ok {
-		// 		roots = append(roots, node)
-		// 	}
-
-		// }
 	}
 	role.Resources = roots
 	return role
 }
 
-func FormResources(resources []*entity.ResourceRaw) *entity.Resource {
+func FormResources(resources []entity.ResourceRaw) *entity.Resource {
 	nodeMap := make(map[int]*entity.Resource)
 	var roots []*entity.Resource
 	// 将节点按照 ParentID 存储到 map 中
@@ -83,22 +67,6 @@ func FormResources(resources []*entity.ResourceRaw) *entity.Resource {
 		} else if ok {
 			roots = append(roots, node)
 		}
-
-		// if parentNode, ok := ]; ok {
-		// 	parentNode.Children = append(parentNode.Children, &entity.Resource{
-		// 		Id:       node.Id,
-		// 		Alias:    node.Alias,
-		// 		Name:     node.Name,
-		// 		Type:     node.Type,
-		// 		ParentId: node.ParentId,
-		// 	})
-		// } else {
-
-		// 	if ok {
-		// 		roots = append(roots, node)
-		// 	}
-
-		// }
 	}
 	return roots[0]
 }

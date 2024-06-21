@@ -162,14 +162,42 @@ func handleUserAdd(c echo.Context) error {
 			Prompt: entity.WARN,
 		})
 		return nil
+	} else {
+		_, err := db.GetRoleRawById(user.Role)
+		if err != nil {
+			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+				Code:   ERROR_INTERNAL,
+				Msg:    "指定的角色不存在",
+				Prompt: entity.WARN,
+			})
+			return err
+		}
+	}
+	if user.Department == 0 {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "必须指定部门",
+			Prompt: entity.WARN,
+		})
+		return nil
+	} else {
+		_, err := db.GetDepartmentById(user.Department)
+		if err != nil {
+			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+				Code:   ERROR_INTERNAL,
+				Msg:    "指定的部门不存在",
+				Prompt: entity.WARN,
+			})
+			return err
+		}
 	}
 	payload := &entity.UserRaw{
-		Username: user.Username,
-		Password: util.Sha256(user.Password),
-		Role:     user.Role,
-		Phone:    user.Phone,
+		Username:   user.Username,
+		Password:   util.Sha256(user.Password),
+		Role:       user.Role,
+		Phone:      user.Phone,
+		Department: user.Department,
 	}
-
 	ok, err := db.AddUser(payload)
 	if err != nil {
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
@@ -341,6 +369,18 @@ func handleUserModify(c echo.Context) error {
 		}
 		payload.Role = role.Id
 	}
+	if userNew.Department != 0 {
+		dep, err := db.GetDepartmentById(userNew.Department)
+		if err != nil {
+			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+				Code:   ERROR_INTERNAL,
+				Msg:    "指定的部门不存在",
+				Prompt: entity.WARN,
+			})
+			return err
+		}
+		payload.Department = dep.Id
+	}
 	err = db.EditUser(int(userIdNum), &payload)
 	if err != nil {
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
@@ -431,19 +471,14 @@ func handleUserList(c echo.Context) error {
 		})
 		return err
 	}
-	// if filter.PageSize == 0 {
-	// 	filter.PageSize = 10
-	// }
-	// if filter.PageNum == 0 {
-	// 	filter.PageNum = 1
-	// }
-	users, err := db.ListUser(&filter)
+	total, users, err := db.ListUser(&filter)
 	if err != nil {
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "查询用户信息失败",
 			Prompt: entity.ERROR,
 		})
+		log.Err(err)
 		return err
 	}
 	return c.JSON(OK, entity.HttpResponse[any]{
@@ -451,7 +486,7 @@ func handleUserList(c echo.Context) error {
 		Msg:    "查询用户信息成功",
 		Prompt: entity.SUCCESS,
 		Data: entity.ListResponse[entity.UserInfo]{
-			Total: int64(len(users)),
+			Total: total,
 			List:  users,
 		},
 	})
