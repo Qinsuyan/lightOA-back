@@ -58,27 +58,28 @@ func Start(port string, dist string) error {
 	e.Static("/", dist)
 	api := e.Group("/api")
 	// 用户登录，不鉴权
-	api.POST("/token", handleUserLogin)
-	api.GET("/token", handleUserLogout)
+	api.POST("/token", handleUserLogin) //1.用户登录
+	api.GET("/token", handleUserLogout) //2.用户登出
 	{
 		onlines := api.Group("")
 		onlines.Use(online)
 		//用户操作
 		user := onlines.Group("/user")
 		{
-			user.POST("", handleUserAdd)          //新增用户
-			user.PUT("", handleSelfModify)        //修改自身用户信息
-			user.PUT("/:id", handleUserModify)    //修改其他用户的信息
-			user.DELETE("/:id", handleUserDelete) //删除用户
-			user.GET("/list", handleUserList)     //列出用户
+			user.POST("", handleUserAdd)          //3.新增用户
+			user.PUT("", handleSelfModify)        //4.修改自身用户信息
+			user.PUT("/:id", handleUserModify)    //5.修改其他用户的信息
+			user.DELETE("/:id", handleUserDelete) //6.删除用户
+			user.GET("/list", handleUserList)     //7.列出用户
 		}
 		//角色操作
 		role := onlines.Group("/role")
 		{
-			role.POST("", handleRoleAdd)              //新增角色
-			role.PUT("", handleRoleEdit)              //编辑角色
-			role.DELETE("/:roleId", handleRoleDelete) //删除角色
-			role.GET("/list", handleRoleList)         //列出角色
+			role.POST("", handleRoleAdd)               //8.新增角色
+			role.PUT("", handleRoleEdit)               //9.编辑角色
+			role.DELETE("/:roleId", handleRoleDelete)  //10.删除角色
+			role.GET("/list", handleRoleList)          //11.列出角色
+			role.GET("/resources", handleResourceList) //12.列出所有的资源
 		}
 	}
 	err := e.Start(port)
@@ -89,6 +90,7 @@ func checkAuth(c echo.Context, auth string) (bool, *entity.UserRaw, error) {
 	token := c.Request().Header.Get("LTOAToken")
 	authorized, user, err := db.IsUserAuthorized(auth, token)
 	if err != nil {
+		log.Err(err).Msg("err while getting user")
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "参数解析失败",

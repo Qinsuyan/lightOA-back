@@ -3,6 +3,7 @@ package api
 import (
 	"lightOA-end/src/db"
 	"lightOA-end/src/entity"
+	"lightOA-end/src/log"
 	"lightOA-end/src/util"
 	"strconv"
 	"time"
@@ -22,7 +23,7 @@ func handleUserLogin(c echo.Context) error {
 		})
 		return err
 	}
-	if payload.Password == "" || payload.Phone == "" {
+	if payload.Password == "" || (payload.Phone == "" && payload.Username == "") {
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
 			Code:   ERROR_INVALID_PARAM,
 			Msg:    "缺少参数",
@@ -31,9 +32,10 @@ func handleUserLogin(c echo.Context) error {
 		return nil
 	}
 	userRaw :=
-		&entity.UserRaw{Phone: payload.Username, Password: util.Sha256(payload.Password)}
+		&entity.UserRaw{Phone: payload.Phone, Username: payload.Username, Password: util.Sha256(payload.Password)}
 	exist, err := db.GetUserRaw(userRaw)
 	if err != nil {
+		log.Err(err).Msg("login: cannot get user!")
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "登录失败",
@@ -49,14 +51,21 @@ func handleUserLogin(c echo.Context) error {
 		})
 		return nil
 	}
-	token := util.FormToken(userRaw.Username)
+	token := util.FormToken(userRaw.Phone)
+	if userRaw.Phone == "" {
+		token = util.FormToken(userRaw.Username)
+	}
 	on := &entity.Online{
 		Phone:  userRaw.Phone,
 		Token:  token,
 		Expire: time.Now().Add(24 * time.Hour),
 	}
+	if userRaw.Phone == "" {
+		on.Phone = userRaw.Username
+	}
 	trueToken, err := db.LoginUser(on)
 	if err != nil {
+		log.Err(err).Msg("login: cannot form token!")
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "登录失败",
@@ -67,6 +76,7 @@ func handleUserLogin(c echo.Context) error {
 	userInfo := &entity.UserInfo{Id: userRaw.Id, Username: userRaw.Username}
 	userRole, err := db.GetUserRoleByRoleId(userRaw.Role)
 	if err != nil {
+		log.Err(err).Msg("login: cannot get role!")
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 			Code:   ERROR_INTERNAL,
 			Msg:    "登录失败",

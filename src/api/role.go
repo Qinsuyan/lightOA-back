@@ -152,6 +152,7 @@ func handleRoleEdit(c echo.Context) error {
 		return nil
 	}
 	err = db.EditRole(&entity.RoleRaw{
+		Id:   role.Id,
 		Name: role.Name,
 		Desc: role.Desc,
 	})

@@ -5,6 +5,7 @@ const ERROR = 0
 const WARN = 1
 const INFO = 3
 const SUCCESS = 4
+const SILENT = 5
 
 // http请求响应
 type HttpResponse[T any] struct {

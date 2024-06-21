@@ -24,7 +24,7 @@ type Online struct {
 type ResourceRaw struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
 	Name      string    `xorm:"varchar(20) notnull index 'name'" json:"name"`    //资源的名称 e.g.添加用户
-	Alias     string    `xorm:"varchar(20) notnull unique 'alias'" json:"alias"` //资源的别名 e.g.user:add
+	Alias     string    `xorm:"varchar(50) notnull unique 'alias'" json:"alias"` //资源的别名 e.g.user:add
 	Type      int       `xorm:"int notnull 'type'" json:"type"`                  //资源的类型,目前没有使用，默认为1
 	ParentId  int       `xorm:"int 'parentId'" json:"parentId"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`

@@ -85,11 +85,22 @@ func addDefaultResource() error {
 	if err != nil {
 		return nil
 	}
+	valuesWithId := ""
+	valuesWithoutId := ""
 	for _, resource := range resources {
-		_, err := con.Insert(&resource)
-		if err != nil {
-			return err
+		if resource.Id != 0 {
+			valuesWithId += fmt.Sprintf("('%s', '%s', %d,%d, %d),", resource.Name, resource.Alias, resource.Type, resource.Id, resource.ParentId)
+		} else {
+			valuesWithoutId += fmt.Sprintf("('%s', '%s', %d, %d),", resource.Name, resource.Alias, resource.Type, resource.ParentId)
 		}
+	}
+	_, err = con.Exec("insert ignore into resource_raw(name,alias,type,id,parentId) values " + valuesWithId[0:len(valuesWithId)-1] + ";")
+	if err != nil {
+		return err
+	}
+	_, err = con.Exec("insert ignore into resource_raw(name,alias,type,parentId) values " + valuesWithoutId[0:len(valuesWithoutId)-1] + ";")
+	if err != nil {
+		return err
 	}
 	return nil
 }

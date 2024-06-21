@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"lightOA-end/src/entity"
 	"strings"
 	"time"
@@ -38,20 +39,32 @@ func GetUserRawByToken(token string) (*entity.UserRaw, error) {
 	if err != nil {
 		return nil, err
 	}
-	user := &entity.UserRaw{
+	userByPhone := &entity.UserRaw{
 		Phone: online.Phone,
 	}
-	exist, err := con.Get(user)
-	if err != nil {
-		return nil, err
+	userByName := &entity.UserRaw{
+		Username: online.Phone,
 	}
-	if !exist {
+	byPhoneExist, pErr := con.Get(userByPhone)
+	byNameExist, eErr := con.Get(userByName)
+	if pErr != nil && eErr != nil {
+		return nil, errors.New("cannot get user")
+	}
+	if !byPhoneExist && !byNameExist {
 		return nil, nil
 	}
-	if !user.DeletedAt.IsZero() {
-		return nil, nil
+	if byPhoneExist {
+		if !userByPhone.DeletedAt.IsZero() {
+			return nil, nil
+		}
+		return userByPhone, nil
+	} else {
+		if !userByName.DeletedAt.IsZero() {
+			return nil, nil
+		}
+		return userByName, nil
 	}
-	return user, nil
+
 }
 
 func LoginUser(record *entity.Online) (string, error) {
@@ -135,11 +148,11 @@ func IsUserAuthorized(alias string, token string) (bool, *entity.UserRaw, error)
 	//如果连root资源都没有，则具有全部权限
 	//否则需要判断用户是否具有该资源权限
 	resourceIds := make([]*entity.RoleResource, 0)
-	idSession := con.Where("roleId = ?", user.Role)
+	idSession := con.Table(entity.RoleResource{}).Where("roleId = ?", user.Role)
 	defer func() {
 		idSession.Close()
 	}()
-	err = idSession.Find(resourceIds)
+	err = idSession.Find(&resourceIds)
 	if err != nil {
 		return false, nil, err
 	}
