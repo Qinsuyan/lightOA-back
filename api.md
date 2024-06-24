@@ -298,3 +298,90 @@ Resource 类型：
 }
 ```
 
+## 13.新增部门
+
+- POST /api/department
+
+- 请求 body：json
+
+```go
+{
+    name:string
+    description:string
+}
+```
+
+- 响应 body：json
+
+```go
+{
+    code int       //200-成功 非200-失败
+    msg string //提示信息
+}
+```
+
+## 14.编辑部门
+
+- PUT /api/department
+
+- 请求 body：json
+
+```go
+{
+    id:int
+    name:string
+    description:string
+}
+```
+
+- 响应 body：json
+
+```go
+{
+    code int       //200-成功 非200-失败
+    msg string //提示信息
+}
+```
+
+## 15.删除部门
+
+- DELETE /api/department/:id
+
+- 响应 body：json
+
+```go
+{
+    code int       //200-成功 非200-失败
+    msg string //提示信息
+}
+```
+
+## 16.列出部门
+
+- GET /api/department/list
+
+- 请求 query
+
+```go
+{
+    size:int
+    index:int
+}
+```
+
+- 响应 body：json
+
+```go
+{
+    code int       //200-成功 非200-失败
+    msg string //提示信息
+    data:{
+        total:int
+        list:{
+            id:int,
+            name:string,
+            description:string
+        }[]
+    }
+}
+```

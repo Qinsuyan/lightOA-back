@@ -3,7 +3,7 @@ package entity
 type UserInfo struct {
 	Id         int    `json:"id"`
 	Username   string `json:"username"`
-	Phone      string `json:"phone"`
+	Phone      string `json:"phone,omitempty"`
 	Department int    `json:"department"`
 	Role       Role   `json:"role,omitempty"`
 }

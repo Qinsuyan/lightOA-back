@@ -4,8 +4,8 @@ import (
 	"lightOA-end/src/api"
 	"lightOA-end/src/config"
 	"lightOA-end/src/db"
-	"lightOA-end/src/file"
 	"lightOA-end/src/log"
+	"lightOA-end/src/storage"
 	"os"
 	"os/signal"
 	"time"
@@ -32,7 +32,7 @@ func main() {
 	if config.Storage.Path == "" {
 		log.Err(nil).Msg("storage file path is empty")
 	}
-	err = file.Init(config.Storage.Path, config.Storage.Password)
+	err = storage.Init(config.Storage.Path, config.Storage.Password)
 	if err != nil {
 		log.Err(err).Msg("failed to init file storage")
 		return

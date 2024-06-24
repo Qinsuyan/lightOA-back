@@ -81,11 +81,39 @@ type UserLog struct {
 //文件信息表（除了本来就是用来展示的文件，还包括报账的发票、缺陷管理的附件和图片）
 type File struct {
 	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
-	UUID      string    `xorm:"varchar(36) unique index 'uuid'" json:"uuid"`
-	Name      string    `xorm:"varchar(50) notnull unique 'name'" json:"name"`
+	UUID      string    `xorm:"varchar(36) unique index 'uuid'" json:"uuid"`   //磁盘上存储的文件名是UUID
+	Name      string    `xorm:"varchar(50) notnull unique 'name'" json:"name"` //真实的文件名
 	Owner     int       `xorm:"bigint(11) index 'owner'" json:"owner"`
-	Type      int       `xorm:"int notnull 'type'" json:"type"` //文件类型，1:展示文件，2:报账发票，3:缺陷管理附件，4:缺陷管理图片
+	Type      int       `xorm:"int notnull 'type'" json:"type"` //文件类型，1:展示文件，2:报账发票，3:缺陷管理
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
 	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
 	UpdatedAt time.Time `xorm:"datetime notnull updated 'updatedAt'" json:"updatedAt"`
+}
+
+//报销表
+type Reimburse struct {
+	Id        int       `xorm:"bigint(11) pk autoincr 'id'" json:"id"`
+	Applicant int       `xorm:"bigint(11) notnull 'applicant'" json:"applicant"`
+	Amount    int       `xorm:"int notnull 'amount'" json:"amount"`
+	Status    int       `xorm:"int notnull 'status'" json:"status"` //报销状态，0:待审核，1:审核通过，2:审核不通过
+	Auditor   int       `xorm:"bigint(11) notnull 'auditor'" json:"auditor"`
+	Title     string    `xorm:"varchar(50) notnull unique 'alias'" json:"alias"`
+	Desc      string    `xorm:"longtext 'description'" json:"description"`
+	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
+	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
+	UpdatedAt time.Time `xorm:"datetime notnull updated 'updatedAt'" json:"updatedAt"`
+}
+
+type ReimbuiseFiles struct {
+	ReimburseId int `xorm:"bigint(11) notnull index 'reimburseId'" json:"reimburseId"`
+	FileId      int `xorm:"bigint(11) notnull index 'fileId'" json:"fileId"`
+}
+
+type ReimburseComments struct {
+	Id          int       `xorm:"bigint(11) pk 'Id'" json:"Id"`
+	ReimburseId int       `xorm:"bigint(11) notnull index 'reimburseId'" json:"reimburseId"`
+	Comment     string    `xorm:"longtext 'comment'" json:"comment"`
+	Creator     int       `xorm:"bigint(11) notnull 'creator'" json:"creator"`
+	CreatedAt   time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
+	UpdatedAt   time.Time `xorm:"datetime notnull updated 'updatedAt'" json:"updatedAt"`
 }

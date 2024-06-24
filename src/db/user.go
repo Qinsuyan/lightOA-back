@@ -29,6 +29,9 @@ func IsUserOnline(token string) (bool, error) {
 func GetUserRaw(user *entity.UserRaw) (bool, error) {
 	return con.Get(user)
 }
+func GetUnscopedUserRaw(user *entity.UserRaw) (bool, error) {
+	return con.Unscoped().Get(user)
+}
 
 func GetUserRawByToken(token string) (*entity.UserRaw, error) {
 	online := &entity.Online{

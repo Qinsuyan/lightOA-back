@@ -163,8 +163,8 @@ func handleUserAdd(c echo.Context) error {
 		})
 		return nil
 	} else {
-		_, err := db.GetRoleRawById(user.Role)
-		if err != nil {
+		role, err := db.GetRoleRawById(user.Role)
+		if err != nil || role == nil {
 			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 				Code:   ERROR_INTERNAL,
 				Msg:    "指定的角色不存在",
@@ -181,8 +181,8 @@ func handleUserAdd(c echo.Context) error {
 		})
 		return nil
 	} else {
-		_, err := db.GetDepartmentById(user.Department)
-		if err != nil {
+		dep, err := db.GetDepartmentById(user.Department)
+		if err != nil || dep == nil {
 			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 				Code:   ERROR_INTERNAL,
 				Msg:    "指定的部门不存在",
@@ -359,7 +359,7 @@ func handleUserModify(c echo.Context) error {
 	}
 	if userNew.Role != 0 {
 		role, err := db.GetRoleRawById(userNew.Role)
-		if err != nil {
+		if err != nil || role == nil {
 			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 				Code:   ERROR_INTERNAL,
 				Msg:    "指定的角色不存在",
@@ -371,7 +371,7 @@ func handleUserModify(c echo.Context) error {
 	}
 	if userNew.Department != 0 {
 		dep, err := db.GetDepartmentById(userNew.Department)
-		if err != nil {
+		if err != nil || dep == nil {
 			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
 				Code:   ERROR_INTERNAL,
 				Msg:    "指定的部门不存在",
