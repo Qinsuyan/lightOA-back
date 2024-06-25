@@ -22,3 +22,11 @@ type UserToken struct {
 	Token string   `json:"token"`
 	User  UserInfo `json:"user"`
 }
+type UserListFilter struct {
+	ListRequest
+	Order    string `query:"order"` //username,phone,createdAt
+	Sort     string `query:"sort"`  //desc,asc
+	Username string `query:"username"`
+	Phone    string `query:"phone"`
+	Role     int    `query:"role"`
+}

@@ -129,17 +129,17 @@ func DeleteRole(id int) error {
 func ListRole(filter *entity.RoleListFilter) ([]entity.Role, error) {
 	session := con.Table(entity.RoleRaw{})
 	if filter.Name != "" {
-		session = session.Where("name like ?", "%"+filter.Name+"%")
+		session.Where("name like ?", "%"+filter.Name+"%")
 	}
 	if filter.Sort != "" {
 		if filter.Sort == "desc" {
-			session = session.Desc("name")
+			session.Desc("name")
 		} else {
-			session = session.Asc("name")
+			session.Asc("name")
 		}
 	}
 	if filter.PageSize != 0 && filter.PageNum != 0 {
-		session = session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
+		session.Limit(filter.PageSize, (filter.PageNum-1)*filter.PageSize)
 	}
 	roleRaws := []entity.RoleRaw{}
 	if err := session.Find(&roleRaws); err != nil {

@@ -15,3 +15,8 @@ type Resource struct {
 	Children []*Resource `json:"children"`
 	ParentId int         `json:"parentId,omitempty"`
 }
+type RoleListFilter struct {
+	ListRequest
+	Name string `query:"name"`
+	Sort string `query:"sort"` //desc,asc
+}

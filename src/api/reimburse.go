@@ -10,10 +10,6 @@ import (
 )
 
 func handleReimburseAddFile(c echo.Context) error {
-	authed, user, err := checkAuth(c, "reimburse:add")
-	if err != nil || !authed {
-		return err
-	}
 	f, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
@@ -44,6 +40,70 @@ func handleReimburseAddFile(c echo.Context) error {
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
 			Code:   ERROR_INVALID_PARAM,
 			Msg:    "文件名不能为空",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	reimburse := c.FormValue("reimburse")
+	if reimburse == "" {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "未传入申报信息ID",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	reimburseId, err := strconv.Atoi(reimburse)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "参数解析失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+
+	//检查权限
+	reimburseInfo, err := db.GetReimburseById(reimburseId)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "参数解析失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburseInfo == nil {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "未找到报销信息",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	user, err := getUser(c)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "登录状态已失效",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	//自己是createdBy或applicant，且状态不是已经审核，才能上传
+	authed := false
+	if reimburseInfo.Applicant == user.Id || reimburseInfo.CreatedBy == user.Id {
+		if reimburseInfo.Status != 3 {
+			authed = true
+		}
+	}
+	if !authed {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "无权限为此报销信息添加文件",
 			Prompt: entity.ERROR,
 		})
 		return nil
@@ -79,6 +139,18 @@ func handleReimburseAddFile(c echo.Context) error {
 		})
 		return err
 	}
+
+	//与reimburse关联
+	err = db.AddReimburseFile([]int{id}, reimburseId)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "添加失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+
 	c.JSON(OK, entity.HttpResponse[any]{
 		Code:   OK,
 		Msg:    "文件保存成功",
@@ -127,32 +199,42 @@ func handleReimburseAdd(c echo.Context) error {
 		})
 		return nil
 	}
-	if len(reimburse.Files) == 0 {
+	if reimburse.HappenedAt.IsZero() {
 		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
 			Code:   ERROR_INVALID_PARAM,
-			Msg:    "文件不能为空",
+			Msg:    "发生时间不能为空",
 			Prompt: entity.ERROR,
 		})
 		return nil
 	}
-	//检查每一个文件是不是都在数据库中
-	err = db.CheckFileExist(reimburse.Files)
-	if err != nil {
-		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
-			Code:   ERROR_INVALID_PARAM,
-			Msg:    "文件不存在",
-			Prompt: entity.ERROR,
-		})
-		return err
+	if reimburse.Applicant == 0 || reimburse.Applicant == user.Id {
+		//未传入申请者时，用户自己是申请者
+		reimburse.Applicant = user.Id
+	} else {
+		authed, _, err := getAuth(c, "reimburse:audit")
+		if err != nil {
+			return err
+		}
+		if !authed {
+			c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+				Code:   ERROR_AUTH,
+				Msg:    "无权限为他人申报",
+				Prompt: entity.ERROR,
+			})
+			return nil
+		}
 	}
-	//添加到reimburse表和reimburseFiles表中
+
+	//添加到reimburse表
 	reimburseTableData := entity.Reimburse{
-		Applicant: user.Id,
-		Amount:    reimburse.Amount,
-		Auditor:   0,
-		Title:     reimburse.Title,
-		Desc:      reimburse.Desc,
-		Status:    0,
+		Applicant:  reimburse.Applicant,
+		Amount:     reimburse.Amount,
+		Auditor:    0,
+		Title:      reimburse.Title,
+		Desc:       reimburse.Desc,
+		Status:     1,
+		HappenedAt: reimburse.HappenedAt,
+		CreatedBy:  user.Id,
 	}
 	reimburseId, err := db.AddReimburse(&reimburseTableData)
 	if err != nil || reimburseId == 0 {
@@ -163,19 +245,11 @@ func handleReimburseAdd(c echo.Context) error {
 		})
 		return err
 	}
-	err = db.AddReimburseFile(reimburse.Files, reimburseId)
-	if err != nil {
-		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
-			Code:   ERROR_INVALID_PARAM,
-			Msg:    "添加失败",
-			Prompt: entity.ERROR,
-		})
-		return err
-	}
-	c.JSON(OK, entity.HttpResponse[any]{
+	c.JSON(OK, entity.HttpResponse[int]{
 		Code:   OK,
 		Msg:    "添加成功",
 		Prompt: entity.SUCCESS,
+		Data:   reimburseId,
 	})
 	return nil
 }
@@ -209,7 +283,7 @@ func handleReimburseDetail(c echo.Context) error {
 		return nil
 	}
 	authed, user, err := getAuth(c, "reimburse:audit")
-	if reimburse.Applicant != user.Id && !authed {
+	if (reimburse.Applicant != user.Id && reimburse.CreatedBy != user.Id) && !authed {
 		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
 			Code:   ERROR_AUTH,
 			Msg:    "无权限",
@@ -235,6 +309,29 @@ func handleReimburseDetail(c echo.Context) error {
 		})
 		return nil
 	}
+	creator := &entity.UserRaw{Id: reimburse.CreatedBy}
+	if reimburse.CreatedBy != reimburse.Applicant {
+		exist, err := db.GetUnscopedUserRaw(creator)
+		if err != nil {
+			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+				Code:   ERROR_INTERNAL,
+				Msg:    "获取创建人信息失败",
+				Prompt: entity.ERROR,
+			})
+			return err
+		}
+		if !exist {
+			c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+				Code:   ERROR_INTERNAL,
+				Msg:    "创建人不存在",
+				Prompt: entity.ERROR,
+			})
+			return nil
+		}
+	} else {
+		creator = applicant
+	}
+
 	response := entity.ReimburseInfo{
 		Id:     reimburse.Id,
 		Title:  reimburse.Title,
@@ -245,7 +342,15 @@ func handleReimburseDetail(c echo.Context) error {
 			Username:   applicant.Username,
 			Department: applicant.Department,
 		},
-		Status: reimburse.Status,
+		CreatedBy: entity.UserInfo{
+			Id:         creator.Id,
+			Username:   creator.Username,
+			Department: creator.Department,
+		},
+		Status:     reimburse.Status,
+		HappenedAt: reimburse.HappenedAt,
+		CreatedAt:  reimburse.CreatedAt,
+		UpdatedAt:  reimburse.UpdatedAt,
 	}
 	//添加auditor,files,comments
 	if reimburse.Auditor != 0 {
@@ -320,4 +425,240 @@ func handleReimburseDetail(c echo.Context) error {
 		Data:   response,
 	})
 	return nil
+}
+
+func handleReimburseEdit(c echo.Context) error {
+
+	reimburse := &entity.ReimbursePayload{}
+	err := c.Bind(reimburse)
+	if err != nil {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "参数解析失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburse.Id == 0 {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "参数错误",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburse.Amount == 0 {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "报销金额不能为0",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburse.Title == "" {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "标题不能为空",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburse.Desc == "" {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "描述不能为空",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburse.HappenedAt.IsZero() {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "发生时间不能为空",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	user, err := getUser(c)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "登录状态已失效",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	reimburseInfo, err := db.GetReimburseById(reimburse.Id)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "获取报销信息失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburseInfo == nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "报销信息不存在",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	if reimburseInfo.Status == 3 {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "无权限修改已审核通过的报销信息",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	if user.Id != reimburseInfo.Applicant && user.Id != reimburseInfo.CreatedBy {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "无权限",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	if reimburse.Applicant != 0 && reimburseInfo.Applicant != reimburse.Applicant {
+		//修改申请人
+		auth, _, err := checkAuth(c, "reimburse:audit")
+		if err != nil {
+			return err
+		}
+		if !auth {
+			c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+				Code:   ERROR_AUTH,
+				Msg:    "无权限修改申请人",
+				Prompt: entity.ERROR,
+			})
+			return nil
+		}
+	}
+	err = db.EditReimburse(&entity.Reimburse{
+		Id:         reimburse.Id,
+		Applicant:  reimburse.Applicant,
+		Amount:     reimburse.Amount,
+		Status:     reimburseInfo.Status,
+		Auditor:    reimburseInfo.Auditor,
+		Title:      reimburse.Title,
+		Desc:       reimburse.Desc,
+		HappenedAt: reimburse.HappenedAt,
+		CreatedBy:  reimburseInfo.CreatedBy,
+	})
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "修改报销信息失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	c.JSON(OK, entity.HttpResponse[any]{
+		Code:   OK,
+		Msg:    "修改成功",
+		Prompt: entity.SUCCESS,
+	})
+	return nil
+}
+
+func handleReimburseDelete(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(ERROR_INVALID_PARAM, entity.HttpResponse[any]{
+			Code:   ERROR_INVALID_PARAM,
+			Msg:    "参数错误",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	reimburse, err := db.GetReimburseById(id)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "删除报销信息失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	if reimburse == nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "报销信息不存在",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	if reimburse.Status == 3 {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "无权限删除已审核通过的报销信息",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	user, err := getUser(c)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "登录状态已失效",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	if user.Id != reimburse.Applicant && user.Id != reimburse.CreatedBy {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "无权限",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	err = db.DeleteReimburse(reimburse.Id)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "删除失败",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
+	c.JSON(OK, entity.HttpResponse[any]{
+		Code:   OK,
+		Msg:    "删除成功",
+		Prompt: entity.SUCCESS,
+	})
+	return nil
+}
+
+func handleReimburseHistory(c echo.Context) error {
+	var filter entity.ReimburseListFilter
+	err := c.Bind(&filter)
+	if err != nil {
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "参数解析失败",
+			Prompt: entity.ERROR,
+		})
+		return err
+	}
+	user, err := getUser(c)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		c.JSON(ERROR_AUTH, entity.HttpResponse[any]{
+			Code:   ERROR_AUTH,
+			Msg:    "登录状态已失效",
+			Prompt: entity.ERROR,
+		})
+		return nil
+	}
 }

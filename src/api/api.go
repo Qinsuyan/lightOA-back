@@ -91,48 +91,45 @@ func Start(port string, dist string) error {
 			department.DELETE("/:id", handleDepartmentDelete) //15.删除部门
 			department.GET("/list", handleDepartmentList)     //16.列出部门
 		}
-		//报账管理
+		//报销管理
 		reimburse := onlines.Group("/reimburse")
 		{
 			//管理
-			reimburse.POST("", handleReimburseAdd)           //17.新增报账
-			reimburse.POST("/files", handleReimburseAddFile) //18.新增报账文件
-			// reimburse.PUT("", handleReimburseEdit)                //19.编辑报账信息（只能申请者编辑未审核、审核失败的报账 ）
-			// reimburse.DELETE("", handleReimburseDelete)           //20.删除报账（只能申请者删除未审核的报账）
-			// reimburse.GET("/history", handleReimburseHistory)     //21.列出自己的报账
-			// reimburse.GET("/list", handleReimburseList)           //22.列出所有人的报账
-			// reimburse.POST("/audit", handleReimburseAudit)        //23.审核报账信息
-			// reimburse.POST("/reapply", handleReimburseReapply)        //24.重新提交报账信息
-			reimburse.GET("/:id", handleReimburseDetail) //25.查看报账详情
-			// reimburse.GET("/sheet", handleReimburseExportAsSheet) //26.导出报账表格
-			// reimburse.GET("/zip", handleReimburseExportAsZip)     //27.导出报账的所有文件（日期-人员-事由-文件；表格）
-			//统计
+			reimburse.POST("", handleReimburseAdd)            //17.新增报销
+			reimburse.POST("/files", handleReimburseAddFile)  //18.新增报销文件
+			reimburse.PUT("", handleReimburseEdit)            //19.编辑报销信息（只能申请者编辑未审核、审核失败的报销）
+			reimburse.DELETE("/:id", handleReimburseDelete)   //20.删除报销（只能申请者删除未审核的报销）
+			reimburse.GET("/history", handleReimburseHistory) //21.列出自己的报销
+			// reimburse.GET("/list", handleReimburseList)           //22.列出所有人的报销
+			// reimburse.POST("/audit", handleReimburseAudit)        //23.审核报销信息
+			// reimburse.GET("/auditors", handleReimburseAudit)        //24.获取有审核权限的人员（包括已删除的人员）
+			// reimburse.POST("/reapply", handleReimburseReapply)        //25.重新提交报销信息
+			reimburse.GET("/:id", handleReimburseDetail) //26.查看报销详情
+			// reimburse.GET("/sheet", handleReimburseExportAsSheet) //27.导出报销表格
+			// reimburse.GET("/zip", handleReimburseExportAsZip)     //28.导出报销的所有文件（日期-人员-事由-文件；表格）
+			// 统计
 			// summary:
-			//reimburse.GET("/statistic", handleReimburseStatistic) //28.报账数据统计
+			// reimburse.GET("/statistic", handleReimburseStatistic) //29.报销数据统计
 			// total_requests: 总报销请求数。
 			// reimbursed_requests: 已报销请求数。
 			// unreimbursed_requests: 未报销请求数。
 			// total_amount: 报销总金额。
 			// monthly_totals:
-
 			// 每个月的总报销金额和报销请求数量。
 			// daily_totals:
-
 			// 每天的总报销金额和报销请求数量。
 			// department_totals:
-
 			// 每个部门的总报销金额和报销请求数量。
 			// category_totals:
-
 			// 每个报销类别的总报销金额和报销请求数量。
 			// individual_requests:
-
 			// 每个报销请求的详细信息，包括ID、金额、日期、状态、部门和类别。
 		}
 		//文件管理
 		files := onlines.Group("/files")
 		{
-			files.GET("/bin/:id", handleGetFileData) //29.获取文件数据（不返回fileinfo，直接返回二进制数据）
+			files.GET("/bin/:id", handleGetFileData) //30.获取文件数据（不返回fileinfo，直接返回二进制数据）
+			files.GET("/:id", handleGetFileInfo)     //31.获取文件数据（返回fileinfo）
 		}
 	}
 	err := e.Start(port)
@@ -175,4 +172,19 @@ func getAuth(c echo.Context, auth string) (bool, *entity.UserRaw, error) {
 		return false, nil, err
 	}
 	return authorized, user, nil
+}
+
+func getUser(c echo.Context) (*entity.UserRaw, error) {
+	token := c.Request().Header.Get("LTOAToken")
+	user, err := db.GetUserRawByToken(token)
+	if err != nil {
+		log.Err(err).Msg("err while getting user")
+		c.JSON(ERROR_INTERNAL, entity.HttpResponse[any]{
+			Code:   ERROR_INTERNAL,
+			Msg:    "参数解析失败",
+			Prompt: entity.ERROR,
+		})
+		return nil, err
+	}
+	return user, nil
 }

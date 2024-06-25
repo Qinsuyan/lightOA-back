@@ -22,18 +22,3 @@ type ListRequest struct {
 	PageSize int `query:"size"`
 	PageNum  int `query:"index"`
 }
-
-type UserListFilter struct {
-	ListRequest
-	Order    string `query:"order"` //username,phone,createdAt
-	Sort     string `query:"sort"`  //desc,asc
-	Username string `query:"username"`
-	Phone    string `query:"phone"`
-	Role     int    `query:"role"`
-}
-
-type RoleListFilter struct {
-	ListRequest
-	Name string `query:"name"`
-	Sort string `query:"sort"` //desc,asc
-}

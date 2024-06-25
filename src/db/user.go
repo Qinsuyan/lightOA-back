@@ -25,14 +25,12 @@ func IsUserOnline(token string) (bool, error) {
 		return false, nil
 	}
 }
-
 func GetUserRaw(user *entity.UserRaw) (bool, error) {
 	return con.Get(user)
 }
 func GetUnscopedUserRaw(user *entity.UserRaw) (bool, error) {
 	return con.Unscoped().Get(user)
 }
-
 func GetUserRawByToken(token string) (*entity.UserRaw, error) {
 	online := &entity.Online{
 		Token: token,
@@ -67,9 +65,7 @@ func GetUserRawByToken(token string) (*entity.UserRaw, error) {
 		}
 		return userByName, nil
 	}
-
 }
-
 func LoginUser(record *entity.Online) (string, error) {
 	search := &entity.Online{
 		Phone: record.Phone,
@@ -96,7 +92,6 @@ func LoginUser(record *entity.Online) (string, error) {
 		return record.Token, nil
 	}
 }
-
 func LogoutUserByToken(token string) {
 	session := con.Table(entity.Online{})
 	defer func() {
@@ -105,7 +100,6 @@ func LogoutUserByToken(token string) {
 	record := &entity.Online{Token: token, Expire: time.Now()}
 	session.Where("token = ?", token).Update(record)
 }
-
 func LogoutUserByPhone(phone string) {
 	session := con.Table(entity.Online{})
 	defer func() {
@@ -125,7 +119,6 @@ func contains(haystack []string, needle string) bool {
 	}
 	return false
 }
-
 func IsUserAuthorized(alias string, token string) (bool, *entity.UserRaw, error) {
 	user, err := GetUserRawByToken(token)
 	if err != nil {
