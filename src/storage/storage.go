@@ -128,6 +128,17 @@ func SaveFile(fileHeader *multipart.FileHeader, allowTypes map[string]bool) (str
 	return uuid.String(), nil
 }
 
+func DeleteFiles(uuids []string) error {
+	for _, uuid := range uuids {
+		fullPath := fmt.Sprintf("%s/%s", dir, uuid)
+		err := os.Remove(fullPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func compress(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	writer := gzip.NewWriter(&buf)

@@ -13,6 +13,27 @@ func AddFileInfo(file *entity.File) (int, error) {
 	return file.Id, err
 }
 
+func DeleteFileInfo(ids []int) ([]string, error) {
+	var files []entity.File
+	err := con.In("id", ids).Find(&files)
+	if err != nil {
+		return nil, err
+	}
+
+	// 提取 UUID 字段
+	var uuids []string
+	for _, file := range files {
+		uuids = append(uuids, file.UUID)
+	}
+	// 删除记录
+	_, err = con.In("id", ids).Delete(&entity.File{})
+	if err != nil {
+		return nil, err
+	}
+
+	return uuids, nil
+}
+
 func CheckFileExist(ids []int) error {
 	var count int64
 	_, err := con.Table(&entity.Reimburse{}).In("id", ids).Count(&count)

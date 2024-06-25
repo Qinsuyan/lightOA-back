@@ -49,3 +49,48 @@ type ReimburseListFilter struct {
 	HappenedAtEnd   time.Time `query:"happenedAtEnd"`
 	CreatedBy       int       `query:"createdBy"` //在查看自己的申请时，这个参数被忽略
 }
+
+type ReimburseStatisticFilter struct {
+	HappenedAtStart time.Time `query:"happenedAtStart"`
+	HappenedAtEnd   time.Time `query:"happenedAtEnd"`
+}
+
+type ReimburseAudition struct {
+	Id      int    `json:"id"`
+	Comment string `json:"comment"`
+	Approve bool   `json:"approve"` //重新提交时，这个参数被忽略
+}
+
+type ReimburseFileDeletion struct {
+	ReimburseId int   `json:"reimburseId"`
+	FileIds     []int `json:"fileIds"`
+}
+
+type ReimburseStatistic struct {
+	TotalCount     int `json:"totalCount"`
+	ApprovedCount  int `json:"approvedCount"`
+	RejectedCount  int `json:"rejectedCount"`
+	TotalAmount    int `json:"totalAmount"`
+	ApprovedAmount int `json:"approvedAmount"`
+	RejectedAmount int `json:"rejectedAmount"`
+}
+
+// total_requests: 总报销请求数。
+// reimbursed_requests: 已报销请求数。
+// unreimbursed_requests: 未报销请求数。
+// total_amount: 报销总金额。
+// daily_totals:
+// 每天的总报销金额和报销请求数量。
+// department_totals:
+// 每个部门的总报销金额和报销请求数量。
+type ReimburseStatisticInfo struct {
+	ReimburseStatistic
+	Daily struct {
+		Data []ReimburseStatistic `json:"data"`
+		Date []string             `json:"date"`
+	} `json:"daily"`
+	Department struct {
+		Data       []ReimburseStatistic `json:"data"`
+		Department []Department         `json:"department"`
+	} `json:"department,omitempty"`
+}

@@ -155,3 +155,16 @@ func ListRole(filter *entity.RoleListFilter) ([]entity.Role, error) {
 	}
 	return result, nil
 }
+
+func GetRoleIdsByResourceId(id int) ([]int, error) {
+	var roleResources []entity.RoleResource
+	err := con.Where("resourceId = ?", id).Find(&roleResources)
+	if err != nil {
+		return nil, err
+	}
+	roleIds := make([]int, len(roleResources))
+	for i := range roleResources {
+		roleIds[i] = roleResources[i].RoleId
+	}
+	return roleIds, nil
+}

@@ -95,41 +95,27 @@ func Start(port string, dist string) error {
 		reimburse := onlines.Group("/reimburse")
 		{
 			//管理
-			reimburse.POST("", handleReimburseAdd)            //17.新增报销
-			reimburse.POST("/files", handleReimburseAddFile)  //18.新增报销文件
-			reimburse.PUT("", handleReimburseEdit)            //19.编辑报销信息（只能申请者编辑未审核、审核失败的报销）
-			reimburse.DELETE("/:id", handleReimburseDelete)   //20.删除报销（只能申请者删除未审核的报销）
-			reimburse.GET("/history", handleReimburseHistory) //21.列出自己的报销
-			// reimburse.GET("/list", handleReimburseList)           //22.列出所有人的报销
-			// reimburse.POST("/audit", handleReimburseAudit)        //23.审核报销信息
-			// reimburse.GET("/auditors", handleReimburseAudit)        //24.获取有审核权限的人员（包括已删除的人员）
-			// reimburse.POST("/reapply", handleReimburseReapply)        //25.重新提交报销信息
-			reimburse.GET("/:id", handleReimburseDetail) //26.查看报销详情
-			// reimburse.GET("/sheet", handleReimburseExportAsSheet) //27.导出报销表格
-			// reimburse.GET("/zip", handleReimburseExportAsZip)     //28.导出报销的所有文件（日期-人员-事由-文件；表格）
-			// 统计
-			// summary:
-			// reimburse.GET("/statistic", handleReimburseStatistic) //29.报销数据统计
-			// total_requests: 总报销请求数。
-			// reimbursed_requests: 已报销请求数。
-			// unreimbursed_requests: 未报销请求数。
-			// total_amount: 报销总金额。
-			// monthly_totals:
-			// 每个月的总报销金额和报销请求数量。
-			// daily_totals:
-			// 每天的总报销金额和报销请求数量。
-			// department_totals:
-			// 每个部门的总报销金额和报销请求数量。
-			// category_totals:
-			// 每个报销类别的总报销金额和报销请求数量。
-			// individual_requests:
-			// 每个报销请求的详细信息，包括ID、金额、日期、状态、部门和类别。
+			reimburse.POST("", handleReimburseAdd)                 //17.新增报销
+			reimburse.POST("/files", handleReimburseAddFile)       //18.新增报销文件
+			reimburse.DELETE("/files", handleReimburseDeleteFile)  //19.删除报销文件
+			reimburse.PUT("", handleReimburseEdit)                 //20.编辑报销信息（只能申请者编辑未审核、审核失败的报销）
+			reimburse.DELETE("/:id", handleReimburseDelete)        //21.删除报销（只能申请者删除未审核的报销）
+			reimburse.GET("/history", handleReimburseHistory)      //22.列出自己的报销
+			reimburse.GET("/list", handleReimburseList)            //23.列出所有人的报销
+			reimburse.POST("/audit", handleReimburseAudit)         //24.审核报销信息
+			reimburse.GET("/auditors", handleGetReimburseAuditors) //25.获取有审核权限的人员（包括已删除的人员）
+			reimburse.POST("/reapply/:id", handleReimburseReapply) //26.重新提交报销信息
+			reimburse.GET("/:id", handleReimburseDetail)           //27.查看报销详情
+			// reimburse.GET("/sheet", handleReimburseExportAsSheet) //28.导出报销表格
+			// reimburse.GET("/zip", handleReimburseExportAsZip)     //29.导出报销的所有文件（日期-人员-事由-文件；表格）
+			reimburse.GET("/statistic", handleReimburseStatistic)        //30.报销数据统计
+			reimburse.GET("/statistic/all", handleReimburseStatisticAll) //31.全部报销数据统计
 		}
 		//文件管理
 		files := onlines.Group("/files")
 		{
-			files.GET("/bin/:id", handleGetFileData) //30.获取文件数据（不返回fileinfo，直接返回二进制数据）
-			files.GET("/:id", handleGetFileInfo)     //31.获取文件数据（返回fileinfo）
+			files.GET("/bin/:id", handleGetFileData) //32.获取文件数据（不返回fileinfo，直接返回二进制数据）
+			files.GET("/:id", handleGetFileInfo)     //33.获取文件数据（返回fileinfo）
 		}
 	}
 	err := e.Start(port)

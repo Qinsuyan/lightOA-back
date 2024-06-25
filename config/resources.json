@@ -91,21 +91,6 @@
         "type": 1
       },
       {
-        "name": "删除报销",
-        "alias": "reimburse:del",
-        "type": 1
-      },
-      {
-        "name": "修改报销",
-        "alias": "reimburse:edit",
-        "type": 1
-      },
-      {
-        "name": "列出报销",
-        "alias": "reimburse:list",
-        "type": 1
-      },
-      {
         "name": "审核报销",
         "alias": "reimburse:audit",
         "type": 1
