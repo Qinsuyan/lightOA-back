@@ -20,7 +20,7 @@ type Department struct {
 	Name      string    `xorm:"varchar(20) notnull index 'name'" json:"name"`
 	Desc      string    `xorm:"longtext 'description'" json:"description"`
 	CreatedAt time.Time `xorm:"datetime notnull created 'createdAt'" json:"createdAt"`
-	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'" json:"deletedAt,omitempty"`
+	DeletedAt time.Time `xorm:"datetime notnull deleted 'deletedAt'"`
 }
 
 // 登录状态表

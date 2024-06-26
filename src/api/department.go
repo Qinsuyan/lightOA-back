@@ -197,7 +197,7 @@ func handleDepartmentList(c echo.Context) error {
 	c.JSON(OK, entity.HttpResponse[entity.ListResponse[entity.Department]]{
 		Code:   OK,
 		Msg:    "获取成功",
-		Prompt: entity.SUCCESS,
+		Prompt: entity.SILENT,
 		Data: entity.ListResponse[entity.Department]{
 			List:  list,
 			Total: total,
